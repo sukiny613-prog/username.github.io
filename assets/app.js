@@ -1,0 +1,20 @@
+const D=window.LAWON_DATA,C=window.LAWON_CATS;
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function hideViews(){document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));document.getElementById("homeView").style.display="none"}
+function goHome(){location.hash="home";document.getElementById("homeView").style.display="block";hideViews();document.getElementById("homeView").style.display="block";window.scrollTo(0,0)}
+function renderHome(){
+ const cg=document.getElementById("categoryGrid"),pg=document.getElementById("popularGrid");
+ cg.innerHTML=C.map(x=>`<button class="cat" onclick="filterCategory('${x[0]}')"><span class="icon">${x[1]}</span><strong>${x[0]}</strong><small>${x[2]}</small></button>`).join("");
+ pg.innerHTML=D.slice(0,6).map(x=>`<article class="qa" onclick="openDetail(${x.id})"><span class="tag">${x.c}</span><h3>${x.q}</h3><p>${x.a.slice(0,80)}…</p></article>`).join("");
+}
+function showView(id,html){hideViews();const v=document.getElementById(id);v.innerHTML=html;v.classList.add("active");window.scrollTo(0,0)}
+function searchLaw(){const q=document.getElementById("searchInput").value.trim();if(q)search(q)}
+function quickSearch(q){document.getElementById("searchInput").value=q;search(q)}
+function search(q){const terms=q.toLowerCase().split(/\s+/).filter(Boolean);const arr=D.map(x=>{const text=(x.q+" "+x.a+" "+x.k+" "+x.c+" "+x.l.law+" "+x.l.article).toLowerCase();let score=terms.reduce((n,t)=>n+(text.includes(t)?2:0),0);return [score,x]}).filter(x=>x[0]).sort((a,b)=>b[0]-a[0]).map(x=>x[1]);showResults(arr,q)}
+function showResults(arr,q){showView("resultsView",`<button class="back" onclick="goHome()">← 홈으로</button><h1>검색 결과</h1><div class="result-count">“${esc(q)}”에 대한 ${arr.length}개의 결과</div>${arr.length?arr.map(x=>`<article class="result" onclick="openDetail(${x.id})"><span class="badge">${x.c}</span><h3>${x.q}</h3><p>${x.a.slice(0,150)}…</p></article>`).join(""):`<div class="helpbox">딱 맞는 답변을 찾지 못했어요.<br>예: “알바비”, “환불”, “미성년자 계약”, “학교폭력”처럼 핵심 단어를 넣어보세요.</div>`}`)}
+function filterCategory(cat){showResults(D.filter(x=>x.c===cat),cat)}
+function openDetail(id){const x=D.find(y=>y.id===id);if(!x)return;const url="https://www.law.go.kr/법령/"+encodeURIComponent(x.l.law);showView("detailView",`<button class="back" onclick="goHome()">← 홈으로</button><div class="detail-card" style="margin-top:18px"><span class="badge">${x.c}</span><h1>${x.q}</h1><div class="answer">${x.a}</div><div class="lawbox"><b>${x.l.law} · ${x.l.article}</b><p class="quote">“${x.l.quote}”</p><a href="${url}" target="_blank" rel="noopener">국가법령정보센터에서 법령 확인 →</a></div><div class="notice">법령은 개정될 수 있습니다. 중요한 사건은 최신 법령 원문과 전문기관 상담을 함께 확인하세요.</div></div>`)}
+function showDictionary(){const terms=[["근로계약","일하기로 약속한 근로조건을 정하는 계약"],["청약철회","일정한 거래에서 소비자가 계약을 되돌릴 수 있는 제도"],["법정대리인","미성년자 등의 법률행위를 대신하거나 동의할 수 있는 사람"],["개인정보","살아 있는 개인을 알아볼 수 있는 정보"],["학교폭력","학교 내외에서 학생을 대상으로 발생하는 폭행·협박·모욕·따돌림 등"],["저작권","창작물에 대해 저작자가 갖는 권리"],["대항력","임대차에서 제3자에 대해 임차권을 주장할 수 있는 법적 힘"],["청약","계약을 체결하기 위한 의사표시"],["사기","사람을 속여 재물 또는 재산상 이익을 취득하는 범죄"]];showView("dictionaryView",`<button class="back" onclick="goHome()">← 홈으로</button><h1>법률사전</h1><div class="dict">${terms.map(t=>`<div><b>${t[0]}</b><p>${t[1]}</p></div>`).join("")}</div>`)}
+function showHelp(){showView("helpView",`<button class="back" onclick="goHome()">← 홈으로</button><h1>도움받기</h1><div class="helpbox"><b>지금 위험한 상황이라면</b><br>즉시 안전한 곳으로 이동하고 112 등 긴급 도움을 요청하세요.<br><br><b>학교 문제</b><br>보호자·학교 담당자·교육 관련 상담 창구에 도움을 요청할 수 있어요.<br><br><b>임금·노동 문제</b><br>근로계약서, 급여명세, 근무기록, 메시지 등 증거를 보관하세요.</div><div class="notice">LAW:ON은 법률정보를 쉽게 설명하기 위한 사이트입니다. 실제 사건의 결론은 구체적인 사실관계와 최신 법령에 따라 달라질 수 있습니다.</div>`)}
+function showMyLaw(){showView("mylawView",`<button class="back" onclick="goHome()">← 홈으로</button><h1>MY LAW</h1><div class="helpbox">관심 있는 법률정보를 모아보는 공간입니다.<br><br>현재 버전에서는 서버나 로그인 없이 동작하도록 즐겨찾기 기능을 준비할 수 있습니다.</div>`)}
+renderHome();
